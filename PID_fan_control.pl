@@ -526,22 +526,25 @@ sub _get_hd_temp
     my $item = shift;
 
     my $disk_dev = "/dev/$item";
-    my $command = "/usr/local/sbin/smartctl -A $disk_dev | grep Temperature | tail -1";
+    my @command = ( "/usr/local/sbin/smartctl", "-A", $disk_dev );
          
-    dprint( 3, "$command\n" );
+    dprint( 3, "@command\n" );
         
-    my $output = `$command`;
-
-    dprint( 2, "$output");
-
     my $temp;
-    if ($output = /Temperature:\s+(\d+)\s+Celsius/) {
-        $temp = $1;
-    }
-    else {
-        # grab 10th item from the output, which is the hard drive temperature (on Seagate NAS HDs)
-        $temp =  (split " ", $output)[9];
-	chomp $temp;
+
+    open my $fh, "-|", @command or die "Unable to spawn @command: $!";
+    while (readline) {
+	next unless /Temperature/;
+	dprint( 2, $_);
+
+        if (/^Temperature:\s+(\d+)\s+Celsius/) {
+            $temp = $1;
+        }
+	else {
+            # grab 10th item from the output, which is the hard drive temperature (on Seagate NAS HDs)
+            $temp =  (split)[9];
+	    chomp $temp;
+	}
     }
 
     return $temp;
