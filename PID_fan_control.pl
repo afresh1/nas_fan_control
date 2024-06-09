@@ -526,7 +526,7 @@ sub _get_hd_temp
     my $item = shift;
 
     my $disk_dev = "/dev/$item";
-    my $command = "/usr/local/sbin/smartctl -A $disk_dev | grep Temperature_Celsius";
+    my $command = "/usr/local/sbin/smartctl -A $disk_dev | grep Temperature | tail -1";
          
     dprint( 3, "$command\n" );
         
@@ -534,11 +534,15 @@ sub _get_hd_temp
 
     dprint( 2, "$output");
 
-    my @vals = split(" ", $output);
-
-    # grab 10th item from the output, which is the hard drive temperature (on Seagate NAS HDs)
-    my $temp = "$vals[9]";
-    chomp $temp;
+    my $temp;
+    if ($output = /Temperature:\s+(\d+)\s+Celsius/) {
+        $temp = $1;
+    }
+    else {
+        # grab 10th item from the output, which is the hard drive temperature (on Seagate NAS HDs)
+        $temp =  (split " ", $output)[9];
+	chomp $temp;
+    }
 
     return $temp;
 }
