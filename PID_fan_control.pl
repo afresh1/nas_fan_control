@@ -558,7 +558,7 @@ sub get_hd_temp
     {
         if( my $temp = _get_hd_temp($item) )
         {
-            dprint( 1, "$disk_dev: $temp\n");
+            dprint( 1, "$item: $temp\n");
             
             $max_temp = $temp if $temp > $max_temp;
         }
